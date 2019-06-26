@@ -71,7 +71,7 @@ class BaseProcess
      */
     protected function decryptContent($content)
     {
-        $request = Request::createFromGlobals()->request;
+        $request = Request::createFromGlobals()->query;
 
         $sign = $request->get('msg_signature');
         $timestamp = $request->get('timestamp');
