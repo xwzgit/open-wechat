@@ -29,6 +29,7 @@ class BaseProcess
 {
     protected $config;
     protected $crypt;
+
     /**
      *
      *
@@ -51,15 +52,46 @@ class BaseProcess
     }
 
     /**
+     * 获取原始数据
+     */
+    public function getOriginContent()
+    {
+        return Request::createFromGlobals()->getContent();
+    }
+
+    /**
      * 获取原始XML数据
      *
      * @return mixed
      */
     protected function dataFromXml()
     {
-        $orContent = Request::createFromGlobals()->getContent();
-
+        $orContent = $this->getOriginContent();
         return $this->crypt->dataFromXml($orContent);
+    }
+
+    /**
+     * 获取query参数
+     *
+     * @return array
+     */
+    public function getQuery()
+    {
+        $request = Request::createFromGlobals()->query;
+
+        $msgSignature = $request->get('msg_signature');
+        $timestamp = $request->get('timestamp');
+        $nonce = $request->get('nonce');
+        $sign = $request->get('signature');
+        $encryptType = $request->get('encrypt_type');
+
+        return  [
+            'msg_signature' => $msgSignature,
+            'timestamp' => $timestamp,
+            'nonce' => $nonce,
+            'signature' => $sign,
+            'encrypt_type' => $encryptType,
+        ];
     }
 
     /**
@@ -71,23 +103,13 @@ class BaseProcess
      */
     protected function decryptContent($content)
     {
-        $request = Request::createFromGlobals()->query;
-
-        $sign = $request->get('msg_signature');
-        $timestamp = $request->get('timestamp');
-        $nonce = $request->get('nonce');
-        $singInfo = [
-            'msg_signature' => $sign,
-            'timestamp' => $timestamp,
-            'nonce' => $nonce,
-            'encrypt' => $content
-        ];
-        $decrypt = $this->crypt->decryptMsg($sign, $timestamp, $nonce, $content);
+        $signInfo = $this->getQuery();
+        $decrypt = $this->crypt->decryptMsg($signInfo['msg_signature'], $signInfo['timestamp'], $signInfo['nonce'], $content);
         if($decrypt['errcode'] == 0){
-            Log::debug('decryptContent',$singInfo);
+            Log::debug('decryptContent',$signInfo);
             return $this->crypt->dataFromXml($decrypt['decrypt']);
         } else {
-            Log::error('decryptContent',array_merge($decrypt,$singInfo));
+            Log::error('decryptContent',array_merge($decrypt,$signInfo));
             return $decrypt;
         }
     }
