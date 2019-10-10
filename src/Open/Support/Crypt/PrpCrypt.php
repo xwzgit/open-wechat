@@ -74,7 +74,7 @@ class PrpCrypt
             return ErrorCode::$IllegalBuffer;
         }
         if ($from_appid != $appid) {
-            return ErrorCode::$ValidateAppidError;
+            return array_merge(ErrorCode::$ValidateAppidError,['fromAppId' => $from_appid,'originAppId' => $appid]);
         }
         return ['errcode' => 0, 'decrypt' => $xml_content];
 
