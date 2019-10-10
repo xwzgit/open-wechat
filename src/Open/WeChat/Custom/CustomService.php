@@ -56,25 +56,17 @@ class CustomService
         $url = $this->getUrl();
         switch ($message_type) {
             case self::TEXT1:
-                $postStr = $this->getJsonText($toUserName,$message);
+                $post = [
+                    'touser' => $toUserName,
+                    'msgtype' => 'text',
+                    'text' => $message
+                ];
                 break;
             default:
                 break;
         }
-        return ApiRequest::postRequest('customService',$url,$postStr);
+
+        return ApiRequest::postRequest('customService',$url,$post);
     }
 
-    /**
-     * 发送text信息的json字符串
-     *
-     * @access private
-     * @param string $toUserName openid
-     * @param string $message 客服信息
-     * @return string
-     */
-    protected function getJsonText($toUserName,$message){
-        $json_tpl = '{"touser":"%s","msgtype":"text","text":{"content":"%s"}}';
-
-        return sprintf($json_tpl,$toUserName,$message);
-    }
 }
