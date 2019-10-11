@@ -44,6 +44,8 @@ class ApiRequest
 
         if($content['errcode'] == 0) {
             return $content;
+        } else{
+            throw new \Exception($content['errmsg'],$content['errcode']);
         }
         Log::error($action,$content);
         return false;
