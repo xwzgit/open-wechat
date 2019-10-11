@@ -93,7 +93,7 @@ class Open
             return  call_user_func_array([$this->api, $handler],$params);
         } catch (Exception $exception) {
             $log = [
-                'errcode' => 40000 ,
+                'errcode' => $exception->getCode() ,
                 'errmsg' => $exception->getCode().":".$exception->getMessage()
             ];
             Log::error($handler,$log);
