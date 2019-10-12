@@ -97,7 +97,9 @@ class Open
                 'errmsg' => $exception->getCode().":".$exception->getMessage()
             ];
             Log::error($handler,$log);
-            return $log;
+
+            throw new \Exception($log['errmsg'],$log['errcode']);
+
         }
 
     }
