@@ -191,3 +191,76 @@
         ]
 ```
 
+#####4、代替公众号调用接口
+
+```
+    //第三方平台根据授权的公众号，获取授权码（access_token）,代替公众号调用接口，
+    前提条件，公众号需要有接口权限，同时需要授权给第三方平台
+    示例：
+    
+    //1，代公众号调用接口调用次数清零 API 的权限。
+    $open = new Open($config);
+    $open->setRequestParams([
+        'appId' => '22_dNcKsCIq_7irQx6RGiZg9ftwMh_o4cK8JGQaAFAAXH',//公众号APPID
+        'accessToken' => 'RGiZg9ftwMh_o4cK8JGQaAFAAXH',//公众号授权ACCESS TOKEN
+    ]);
+
+    $clear = $open->clearWeChatQuota();
+    
+    //2，清零第三方平台接口调用次数。
+    $open = new Open($config);
+    $open->setRequestParams([
+        'appId' => '22_dNcKsCIq_7irQx6RGiZg9ftwMh_o4cK8JGQaAFAAXH',//公众号APPID
+        'accessToken' => 'RGiZg9ftwMh_o4cK8JGQaAFAAXH',//公众号授权ACCESS TOKEN
+    ]);
+
+    $clear = $open->clearComponentQuota();
+    
+```
+######4.1、代替公众号发起网页授权,;根据access token和openid 获取用户微信信息
+
+```
+    //1，获取授权地址。
+    $open = new Open($config);
+    $open->setRequestParams([
+        'appId' => '22_dNcKsCIq_7irQx6RGiZg9ftwMh_o4cK8JGQaAFAAXH',//公众号APPID
+        'redirectUrl' => 'http://www.juhe.cn',//授权回调地址,
+        'scope' => 'componentAccessToken',//授权方式，默认寂寞授权
+    ]);
+
+    $url = $open->createWebAuthorizeUrl();
+    
+    //2，根据授权地址回调返回的CODE，获取用户的openid和access token。
+    $open = new Open($config);
+    $open->setRequestParams([
+        'appId' => '22_dNcKsCIq_7irQx6RGiZg9ftwMh_o4cK8JGQaAFAAXH',//公众号APPID
+        'code' => '回调的CODE',//回调的CODE,
+        'componentAccessToken' => 'componentAccessToken',//第三方平台的 access token
+    ]);
+
+    $response = $open->getWebAccessToken();
+    
+    //3，刷新用户信息获取的access_token
+    $open = new Open($config);
+    $open->setRequestParams([
+        'appId' => '22_dNcKsCIq_7irQx6RGiZg9ftwMh_o4cK8JGQaAFAAXH',//公众号APPID
+        'refreshToken' => 'refreshToken',//回调的CODE,
+        'componentAccessToken' => 'componentAccessToken',//第三方平台的 access token
+    ]);
+
+    $response = $open->getWebAccessTokenRefresh();
+```
+
+###公众相关调用
+```
+    1，通过access_token 和openID 获取用户信息
+    2，通过公众号授权的access token调用公众号相关的接口（群发，自动回复，自定义菜单等等）
+    
+    
+    预计接口：https://i.mp.fkw.com/?openSourceId=303#/template-message
+    1，消息模板
+    2，自动回复
+    3，自定菜单
+    4，粉丝列表
+    5，资源库管理
+```

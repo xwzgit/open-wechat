@@ -20,6 +20,20 @@ class OpenApi
     protected $refAuthAccTk = 'https://api.weixin.qq.com/cgi-bin/component/api_authorizer_token';
     protected $authInfo = 'https://api.weixin.qq.com/cgi-bin/component/api_get_authorizer_info';
 
+    //代公众号调用接口调用次数清零 API 的权限。
+    protected $clearQuota = 'https://api.weixin.qq.com/cgi-bin/clear_quota';
+
+    //第三方平台对其所有 API 调用次数清零（只与第三方平台相关，与公众号无关，接口如 api_component_token）
+    protected $componentClearQuota= 'https://api.weixin.qq.com/cgi-bin/component/clear_quota';
+
+    //代替公众号发起网页授权请求
+    protected $authorizeUrl = 'https://open.weixin.qq.com/connect/oauth2/authorize';
+
+    //通过code获取访问公众号用户信息的access_code
+    protected $webAuthorizeToken ='https://api.weixin.qq.com/sns/oauth2/component/access_token';
+    protected $webAuthorizeTokenRefresh ='https://api.weixin.qq.com/sns/oauth2/component/refresh_token';
+
+
     public function __construct(Config $config)
     {
         $this->config = $config;
@@ -187,5 +201,139 @@ class OpenApi
         }
 
         return false;
+    }
+
+    /**
+     * 代公众号调用接口调用次数清零 API 的权限。
+     * 每个公众号每个月有 10 次清零机会，包括在微信公众平台上的清零以及调用 API 进行清零
+     *
+     * @return array|bool|mixed
+     * @throws \Exception
+     */
+    public function clearWeChatQuota()
+    {
+        $appId = $this->getRequestParams('clearWeChatQuota','appId');
+        $accessToken = $this->getRequestParams('clearWeChatQuota','accessToken');
+        if($appId && $accessToken) {
+            $params = [
+                'appid' => $appId,
+            ];
+            $url = $this->clearQuota .'?access_token='.$accessToken;
+
+            return ApiRequest::postRequest('clearWeChatQuota',$url,$params);
+
+        }
+        return false;
+    }
+
+    /**
+     * 第三方平台对其所有 API 调用次数清零（只与第三方平台相关，与公众号无关，接口如 api_component_token）
+     *
+     * @return array|bool|mixed
+     * @throws \Exception
+     */
+    public function clearComponentQuota()
+    {
+        if($accessToken = $this->getRequestParams('clearComponentQuota','componentAccessToken')) {
+
+            $params = $this->globalParams(['component_appid' => '']);
+            $url = $this->clearComponentQuota() .'?component_access_token='.$accessToken;
+            return ApiRequest::postRequest('clearComponentQuota',$url,$params);
+
+        }
+        return false;
+    }
+
+    /**
+     * 创建第三方平台代理发送授权地址
+     *
+     * @return string
+     */
+    public function createWebAuthorizeUrl()
+    {
+        //?appid=APPID&redirect_uri=REDIRECT_URI&response_type=code&scope=SCOPE&state=STATE&component_appid=component_appid#wechat_redirect
+        $appId = $this->getRequestParams('createWebAuthorizeUrl','appId');
+        $redirectUrl = $this->getRequestParams('createWebAuthorizeUrl','redirectUrl');
+        $scope = $this->getRequestParams('createWebAuthorizeUrl','scope');
+
+        if($appId && $redirectUrl) {
+            $params = [
+                'appid' => $appId,
+                'redirect_uri' => urlencode($redirectUrl),
+                'response_type' => 'code',
+                'scope' => $scope ? : 'snsapi_base',
+                'state' => 'STATE',
+                'component_appid' =>  $this->globalParams(['component_appid' => ''])['component_appid']
+            ];
+
+            $query = $this->convertUrlParams($params);
+
+            return $this->authorizeUrl.'?'.$query.'#wechat_redirect';
+        } else {
+            throw new \Exception('appId或redirectUrl存在','40000');
+        }
+
+    }
+
+
+
+    /**
+     * 通过 code 换取 access_token
+     * 通过code获取访问公众号用户信息的access_code
+     *
+     * 会返回：{
+    "access_token":"ACCESS_TOKEN",
+    "expires_in":7200,
+    "refresh_token":"REFRESH_TOKEN",
+    "openid":"OPENID",
+    "scope":"SCOPE"
+    }
+     *
+     */
+    public function getWebAccessToken()
+    {
+        $appId = $this->getRequestParams('createWebAuthorizeUrl','appId');
+        $code = $this->getRequestParams('createWebAuthorizeUrl','code');
+        $componentAccessToken = $this->getRequestParams('createWebAuthorizeUrl','componentAccessToken');
+
+        if($appId && $code && $componentAccessToken) {
+            $params = [
+                'appid' => $appId,
+                'code' => $code,
+                'grant_type' => 'authorization_code',
+                'component_appid' =>  $this->globalParams(['component_appid' => ''])['component_appid'],
+                'component_access_token' => $componentAccessToken
+            ];
+
+            return ApiRequest::getRequest('createWebAuthorizeUrl',$this->webAuthorizeToken,$params);
+        } else {
+            throw new \Exception('appId、code、componentAccessToken有误请确认','40000');
+        }
+    }
+
+    /**
+     * 刷新 access_token
+     * 通过code获取访问公众号用户信息的access_code
+     *
+     */
+    public function getWebAccessTokenRefresh()
+    {
+        $appId = $this->getRequestParams('createWebAuthorizeUrl','appId');
+        $refreshToken = $this->getRequestParams('createWebAuthorizeUrl','refreshToken');
+        $componentAccessToken = $this->getRequestParams('createWebAuthorizeUrl','componentAccessToken');
+
+        if($appId && $refreshToken && $componentAccessToken) {
+            $params = [
+                'appid' => $appId,
+                'grant_type' => 'refresh_token',
+                'component_appid' =>  $this->globalParams(['component_appid' => ''])['component_appid'],
+                'component_access_token' => $componentAccessToken,
+                'refresh_token' => $refreshToken
+            ];
+
+            return ApiRequest::getRequest('createWebAuthorizeUrl',$this->webAuthorizeTokenRefresh,$params);
+        } else {
+            throw new \Exception('appId、refreshToken、componentAccessToken有误请确认','40000');
+        }
     }
 }

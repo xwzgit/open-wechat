@@ -53,6 +53,43 @@ class ApiRequest
     }
 
     /**
+     * get请求
+     *
+     * @param $action
+     * @param $url
+     * @param $params
+     * @return array|bool|mixed
+     * @throws \Exception
+     */
+    public static function getRequest($action,$url,$params)
+    {
+        try{
+            $client = new Client();
+            $response = $client->get($url,[
+                'timeout' => 5,
+                'query' => $params
+            ]);
+            $content = self::responseProcess($response);
+
+        } catch (\Exception $exception) {
+            $content = [
+                'errcode' => 40000,
+                'errmsg' => '['.$exception->getCode().']'.$exception->getMessage()
+            ];
+        }
+
+
+        if($content['errcode'] == 0) {
+            return $content;
+        } else{
+            Log::error($action,$content);
+            throw new \Exception($content['errmsg'],$content['errcode']);
+        }
+        return false;
+    }
+
+
+    /**
      * 处理请求结果
      *
      * @param $response
