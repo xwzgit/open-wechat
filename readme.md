@@ -12,6 +12,16 @@
             'auth_redirect' => 'http://domain/open/auth/redirect',//授权回调地址
             'auth_page' => 'http://domain/', //授权发起页面地址（拥有回调成功后页面刷新）
         ],
+         //公众号信息
+        'weChat' => [
+            'app_id' => 'wxcdc43d8**045c',
+            'app_secret' => '95f15f6e553***e3fa8',
+            'token' => '86ce8e1bddbf**c3eea0',
+            'redirect_uri' => env('APP_URL').'/',
+            'response_type' => 'code',
+            'scope' => 'snsapi_base',
+            'use_proxy' => 1,
+        ],
         'log' => [//日志
             'file' => './Logs/log.log',
             'level' => 'debug',
@@ -44,12 +54,8 @@
     每个令牌是存在有效期（2小时）的，且令牌的调用不是无限制的，请第三方平台做好令牌的管理，
     在令牌快过期时（比如1小时50分）再进行刷新
     
-    $open = new Open($config);
-    //设置请求参数
-    $open->setRequestParams(['verifyTicket' => 'ticket@@@L_1***cTw8tumj**e4g']);
-    $componentAccessToken = $open->componentAccessToken();
-    
-    $componentAccessToken格式：
+    $response = OpenApiServer::componentAccessToken($verifyTicket)
+    $response格式：
     [
         "errcode" => 0, //errcode 不为0的时候说明接口请求出错了，详细看errmsg
         "expires_in" => 7200,
@@ -63,12 +69,8 @@
 ```
     注：pre_auth_code 预授权码用于公众号或小程序授权时的第三方平台方安全验证。
     
-    $open = new Open($config);
-    //设置请求参数
-    $open->setRequestParams(['componentAccessToken' => 'ticket@@@L_1***cTw8tumj**e4g']);
-    $preAuthCode = $open->preAuthCode();
-    
-    $preAuthCode格式：
+    $response = OpenApiServer::preAuthCode($componentAccessToken)
+    response格式：
     [
         "errcode" => 0, //errcode 不为0的时候说明接口请求出错了，详细看errmsg
         "expires_in" => 1800,
@@ -81,13 +83,9 @@
 
 ```
     注：pre_auth_code 预授权码用于公众号或小程序授权时的第三方平台方安全验证。
+    $response = OpenApiServer::createAuthUrl($preAuthCode)
     
-    $open = new Open($config);
-    //设置请求参数
-    $open->setRequestParams(['preAuthCode' => 'preauthcode@@@L_1***cTw8tumj**e4g']);
-    $preAuthCode = $open->createAuthUrl();
-    
-    $preAuthCode格式：
+    $response格式：
     [
         "errcode" => 0, //errcode 不为0的时候说明接口请求出错了，详细看errmsg
         "authUrl" => "https://mp.weixin.qq.com/cgi-bin/componentloginpage?component_appid=wx3c7a**&pre_auth_code=preauthcode-_WZYBLfHQZC8mrYCrhdlNSrNM_CX2BJP5F&auth_type=1&redirect_uri=%2Fopen%2Fauth%2Fredirect",
@@ -103,14 +101,9 @@
         注：请妥善保管access_token(有效期2小时)和refresh_access_token，当access_token将要过期的时候可以通过refresh_access_tokek
         刷新token,请提前几分钟刷新token
         
-        $open = new Open($config);
-        $open->setRequestParams([
-            'componentAccessToken' => '22_dNcKsCIq_7irQx6RGiZg9ftwMh_o4cK8JGQaAFAAXH',
-            'authCode' => 'RGiZg9ftwMh_o4cK8JGQaAFAAXH'
-        ]);
+        $response = OpenApiServer::authAccessToken($componentAccessToken,$authCode)
 
-        $authAccessToken = $open->authAccessToken();
-        $authAccessToken返回结构：(参数格式等同于开发文档)
+        $response返回结构：(参数格式等同于开发文档)
         [
             "errcode" => 0, //errcode 不为0的时候说明接口请求出错了，详细看errmsg
             "authorization_info" => [
@@ -133,15 +126,9 @@
         注：请妥善保管access_token(有效期2小时)和refresh_access_token，当access_token将要过期的时候可以通过refresh_access_tokek
         刷新token,请提前几分钟刷新token
         
-        $open = new Open($config);
-        $open->setRequestParams([
-            'componentAccessToken' => '22_dNcKsCIq_7irQx6RGiZg9ftwMh_o4cK8JGQaAFAAXH',
-            'authAppId' => 'RGiZg9ftwMh_o4cK8JGQaAFAAXH',
-            'refreshToken' => '22_dNcKsCIq_7irQx6RGiZg9ftwMh_o4cK8JGQaAFAAXH,
-        ]);
-
-        $authAccessToken = $open->authAccessToken();
-        $authAccessToken返回结构：(参数格式等同于开发文档)
+        $response = OpenApiServer::refreshAuthAccessToken($componentAccessToken,$authAppId,$refreshToken)
+    
+        $response返回结构：(参数格式等同于开发文档)
         [
             "errcode" => 0, //errcode 不为0的时候说明接口请求出错了，详细看errmsg
             "authorizer_access_token" => "authorizer_access_token",
@@ -152,14 +139,9 @@
 
 #####3、获取授权公众号信息
 ```
-        $open = new Open($config);
-        $open->setRequestParams([
-            'componentAccessToken' => '22_dNcKsCIq_7irQx6RGiZg9ftwMh_o4cK8JGQaAFAAXH',
-            'authAppId' => 'RGiZg9ftwMh_o4cK8JGQaAFAAXH',
-        ]);
+        $response = OpenApiServer::authorizeInfo($componentAccessToken,$authAppId)
 
-        $authorizeInfo = $open->authorizeInfo();
-        $authorizeInfo返回结构：(参数格式等同于开发文档)
+        $response返回结构：(参数格式等同于开发文档)
         [
             "errcode" => 0, //errcode 不为0的时候说明接口请求出错了，详细看errmsg
             "authorizer_info" => [
@@ -199,56 +181,55 @@
     示例：
     
     //1，代公众号调用接口调用次数清零 API 的权限。
-    $open = new Open($config);
-    $open->setRequestParams([
-        'appId' => '22_dNcKsCIq_7irQx6RGiZg9ftwMh_o4cK8JGQaAFAAXH',//公众号APPID
-        'accessToken' => 'RGiZg9ftwMh_o4cK8JGQaAFAAXH',//公众号授权ACCESS TOKEN
-    ]);
-
-    $clear = $open->clearWeChatQuota();
-    
+    $response = OpenApiServer::clearWeChatQuota($appId,$accessToken)
+    $response格式：
+    [
+        "errcode" => 0, //errcode 不为0的时候说明接口请求出错了，详细看errmsg
+        "errmsg" => "ok",
+    ]
     //2，清零第三方平台接口调用次数。
-    $open = new Open($config);
-    $open->setRequestParams([
-        'appId' => '22_dNcKsCIq_7irQx6RGiZg9ftwMh_o4cK8JGQaAFAAXH',//公众号APPID
-        'accessToken' => 'RGiZg9ftwMh_o4cK8JGQaAFAAXH',//公众号授权ACCESS TOKEN
-    ]);
-
-    $clear = $open->clearComponentQuota();
-    
+    $response = OpenApiServer::clearComponentQuota($componentAccessToken);
+    $response格式：
+    [
+        "errcode" => 0, //errcode 不为0的时候说明接口请求出错了，详细看errmsg
+        "errmsg" => "ok",
+    ]
 ```
 ######4.1、代替公众号发起网页授权,;根据access token和openid 获取用户微信信息
 
 ```
     //1，获取授权地址。
-    $open = new Open($config);
-    $open->setRequestParams([
-        'appId' => '22_dNcKsCIq_7irQx6RGiZg9ftwMh_o4cK8JGQaAFAAXH',//公众号APPID
-        'redirectUrl' => 'http://www.juhe.cn',//授权回调地址,
-        'scope' => 'componentAccessToken',//授权方式，默认寂寞授权
-    ]);
-
-    $url = $open->createWebAuthorizeUrl();
+    $response = OpenApiServer::getWebAuthorizeUrl($appId, $redirectUrl, $scope);
+    $response格式：
+    [
+        "errcode" => 0, //errcode 不为0的时候说明接口请求出错了，详细看errmsg
+        "authUrl" => "http://....",
+    ]
     
     //2，根据授权地址回调返回的CODE，获取用户的openid和access token。
-    $open = new Open($config);
-    $open->setRequestParams([
-        'appId' => '22_dNcKsCIq_7irQx6RGiZg9ftwMh_o4cK8JGQaAFAAXH',//公众号APPID
-        'code' => '回调的CODE',//回调的CODE,
-        'componentAccessToken' => 'componentAccessToken',//第三方平台的 access token
-    ]);
-
-    $response = $open->getWebAccessToken();
+    
+    $response = OpenApiServer::getWebAuthorizeUrl($appId,$code,$componentAccessToken);
+    $response :
+    {
+        "errcode" => 0,
+        "access_token"=>  "ACCESS_TOKEN",
+        "expires_in"=>  7200,
+        "refresh_token"=>  "REFRESH_TOKEN",
+        "openid"=>  "OPENID",
+        "scope"=>  "SCOPE"
+    }
     
     //3，刷新用户信息获取的access_token
-    $open = new Open($config);
-    $open->setRequestParams([
-        'appId' => '22_dNcKsCIq_7irQx6RGiZg9ftwMh_o4cK8JGQaAFAAXH',//公众号APPID
-        'refreshToken' => 'refreshToken',//回调的CODE,
-        'componentAccessToken' => 'componentAccessToken',//第三方平台的 access token
-    ]);
-
-    $response = $open->getWebAccessTokenRefresh();
+    $response = OpenApiServer::getWebAccessTokenRefresh($appId,$code,$componentAccessToken);
+    $response :
+    {
+        "errcode" => 0,
+        "access_token"=>  "ACCESS_TOKEN",
+        "expires_in"=>  7200,
+        "refresh_token"=>  "REFRESH_TOKEN",
+        "openid"=>  "OPENID",
+        "scope"=>  "SCOPE"
+    }
 ```
 
 ###公众相关调用
@@ -263,4 +244,97 @@
     3，自定菜单
     4，粉丝列表
     5，资源库管理
+```
+公众号开发
+```
+    1,网页授权
+    2,获取openID
+    3,获取用户信息
+    4,获取基础access token
+    5,获取jsapi ticket
+    6,获取分享配置
+
+```
+### 1,网页授权
+```
+    //1,获取授权地址，跳转活动code
+    $response = WeChatApiServer::getAuthCodeUrl();
+    $response :
+    [
+        "errcode" => 0,
+        "authUrl" => "http://....."
+    ]
+    
+    //2,根据code获取access Token 和 用户openId
+    $response = WeChatApiServer::getOpenIdAccessToken($code);
+    $response :
+        [
+            "errcode" => 0
+            "access_token" =>"ACCESS_TOKEN",
+            "expires_in" =>7200,
+            "refresh_token" =>"REFRESH_TOKEN",
+            "openid" =>"OPENID",
+            "scope" =>"SCOPE"
+        ]
+        
+    //3,刷新AccessToken
+    $response = WeChatApiServer::refreshAccessToken($refresToken);
+    $response :
+    [
+        "errcode" => 0
+        "access_token" =>"ACCESS_TOKEN",
+        "expires_in" =>7200,
+        "refresh_token" =>"REFRESH_TOKEN",
+        "openid" =>"OPENID",
+        "scope" =>"SCOPE"
+    ]
+    
+    //4,根据Access Token 和OpenId 获取用户信息
+    $response = WeChatApiServer::getUserInfo($openId,$accessToken)
+    $response :
+    [
+        "errcode" => 0
+        "openid" => " OPENID",
+        " nickname" => NICKNAME,
+        "sex" => "1",
+        "province" => "PROVINCE"
+        "city" => "CITY",
+        "country" => "COUNTRY",
+        "headimgurl" => "http://thirdwx.qlogo.cn/mmopen/g3MonUZtNHkdmzicIlibx6iaFqAc56vxLSUfpb6n5WKSYVY0ChQKkiaJSgQ1dZuTOgvLLrhJbERQQ4eMsv84eavHiaiceqxibJxCfHe/46",
+        "privilege" => [ "PRIVILEGE1" "PRIVILEGE2"     ],
+        "unionid" => "o6_bmasdasdsad6_2sgVt7hMZOPfL"
+    ]
+```
+
+###2,获取基础AccessToken 和jsApiTicket
+```
+    //1,获取基础Access Token(全局保存，2小时有效期，提前刷新)
+    $response = WeChatApiServer::getBasicAccessToken()
+    $response ：
+    [
+        "errcode" => 0
+        "access_token" => "ACCESS_TOKEN",
+        "expires_in" => 7200
+    ]
+    
+    //2,获取jsApiTicket(全局保存，2小时有效期，提前刷新)
+    $response = WeChatApiServer::getJsApiTicket($accessToken)
+    $response ：
+    [
+        "errcode" => 0,
+        "errmsg" => "ok",
+        "ticket" => "bxLdikRXVbTPdHSM05e5u5sUoXNKd8-41ZO3MhKoyN5OfkWITDGgnr2fwJ0m9E8NYzWKVZvdVtaUgWvsdshFKA",
+        "expires_in" => 7200
+    ]
+    
+    //3,根据jsApiTicket获取分享配置
+    $response = WeChatApiServer::getShareSetting($jsApiTicket,$shareUrl)
+    $response ：
+    [
+        "errcode" => 0,
+        'timeStamp' => time(),
+        'nonceStr' => 'ddddd',
+        'signUrl' => $shareUrl,
+        'signature' => $signature,
+    ]
 ```

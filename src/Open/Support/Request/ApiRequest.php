@@ -43,7 +43,8 @@ class ApiRequest
         }
 
 
-        if($content['errcode'] == 0) {
+        if(!isset($content['errcode']) || $content['errcode'] == 0) {
+            $content['errcode'] = 0;
             return $content;
         } else{
             Log::error($action,$content);
@@ -79,7 +80,8 @@ class ApiRequest
         }
 
 
-        if($content['errcode'] == 0) {
+        if(!isset($content['errcode']) || $content['errcode'] == 0) {
+            $content['errcode'] = 0;
             return $content;
         } else{
             Log::error($action,$content);
@@ -110,5 +112,47 @@ class ApiRequest
             ];
         }
 
+    }
+
+    /**
+     * 处理请求参数
+     * @param $params
+     * @return string
+     */
+    public static function convertUrlParams($params)
+    {
+        $buff = "";
+        foreach ($params as $k => $v) {
+            if ($k != "sign") {
+                $buff .= $k . "=" . $v . "&";
+            }
+        }
+        $buff = trim($buff, "&");
+        return $buff;
+    }
+
+    /**
+     * 获取原生session
+     *
+     * @param int $length
+     * @param bool $normal
+     * @return bool|string
+     */
+    public static function randString($length = 128, $normal = true)
+    {
+        if ($normal) {
+            $char = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        } else {
+            $char = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ~!@#$%^&*()_+';
+        }
+        if (!is_int($length) || $length < 0) {
+            return false;
+        }
+        $string = '';
+        for ($i = $length; $i > 0; $i--) {
+            $string .= $char[mt_rand(0, strlen($char) - 1)];
+        }
+
+        return $string;
     }
 }

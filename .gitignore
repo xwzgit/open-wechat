@@ -3,4 +3,4 @@
 /reports
 phpunit.xml
 TokenStore.log
-
+.DS_Store

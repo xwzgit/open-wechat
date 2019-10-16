@@ -12,6 +12,7 @@ namespace Open\Auth;
 
 use Exception;
 use Open\Support\Apis\OpenApi;
+use Open\Support\Apis\WeChatApi;
 use Open\Support\Log\Log;
 use Open\Support\Config\Config;
 
@@ -25,7 +26,7 @@ use Open\Support\Config\Config;
  * @method array refreshAuthAccessToken()
  * @method array authorizeInfo()
  */
-class Open
+class WeChat
 {
     protected $api;
 
@@ -53,7 +54,7 @@ class Open
     {
         $this->config = new Config($config);
         $this->registerLogService();
-        $this->api = new OpenApi($this->config);
+        $this->api = new WeChatApi($this->config);
 
     }
 
@@ -68,7 +69,7 @@ class Open
     {
         $logger = Log::createLogger(
             $this->config->get('log.file'),
-            'open.wechat',
+            'open.custom.wechat',
             $this->config->get('log.level', 'warning'),
             $this->config->get('log.type', 'daily'),
             $this->config->get('log.max_file', 30)
