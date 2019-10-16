@@ -23,7 +23,7 @@
     "autoload": {
         "psr-4": {
             "Open\\": "src/Open/",
-            "ApiServer" : "src/ApiServer"
+            "ApiServer\\" : "src/ApiServer/"
         }
     },
     "autoload-dev": {
